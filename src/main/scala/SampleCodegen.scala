@@ -2,38 +2,58 @@ import scala.slick.jdbc.codegen
 import scala.slick.jdbc.reflect
 import scala.slick.migrations._
 import DB.session
+import com.typesafe.config._
+
 object SampleCodegen {
-  def gen(mm: MyMigrationManager) {
-    mm.db withSession {
-      if (mm.notYetAppliedMigrations.size > 0) {
-        println("Your database is not up to date, code generation denied for compatibility reasons. Please update first.")
-        return
-      }
-      
+  val tables = DB.tables
+  val tableNames = tables.map(_.table).toList
+  val tableMap = tables.map(table => table.table -> table).toMap
+  val tableToScalaName = tables.map(table => table.table -> table.scalaname).toMap
+  def doGen(ver: String) = {
+    DB.database withSession {
+
       class MyTableGen(schema: codegen.Schema, table: reflect.Table) extends codegen.Table(schema, table) {
-        override def entityName = Map(
-          "users" -> "User")(name)
+        override def entityName = tableToScalaName(name)
+        override def columns = {
+          val conf = tableMap(name)
+          println("getting columns for "+ conf)
+          val allColumns = super.columns
+          println("allColumns is " + allColumns.map(_.name))
+          val included:List[codegen.Column] = allColumns.filter(c => conf.included contains c.name)
+          println("included is " + included.map(_.name))
+          val namesToExclude:List[String] = conf.excluded ::: conf.included
+          println("names to exclude is " + namesToExclude)
+          val returner = (included ::: allColumns.filterNot(namesToExclude contains _.name)) take conf.maxcols 
+          println("returning " + returner.map(_.name))
+          returner
+        }
       }
 
-      val latest = mm.latest
-      List("v" + latest, "latest").foreach {
+      List("v" + ver, "latest").foreach {
         version =>
-          val pkg = "datamodel." + version + ".schema"
+          val pkg =  DB.pkg + "." + version + ".schema"
           val generator = new codegen.Schema(
-            new scala.slick.jdbc.reflect.Schema((List("users"))),
+            new scala.slick.jdbc.reflect.Schema(tableNames),
             pkg) {
             override def table(t: reflect.Table) = new MyTableGen(this, t)
             override def render = super.render + s"""
 package $pkg.version{
   object Version{
-    def version = $latest
+    def version = $ver
   }
 }
 """
           }
-          val folder = System.getProperty("user.dir") + "/src/main/scala"
+          val folder = DB.genfolder
           generator.singleFile(folder)
       }
     }
+  }
+  def gen(mm: MyMigrationManager) {
+    if (mm.notYetAppliedMigrations.size > 0) {
+      println("Your database is not up to date, code generation denied for compatibility reasons. Please update first.")
+      return
+    }
+    doGen(mm.latest.toString)
   }
 }

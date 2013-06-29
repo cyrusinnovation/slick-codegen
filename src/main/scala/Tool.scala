@@ -31,6 +31,8 @@ object Tool extends App{
     case "reset" :: Nil => SampleMigrations.reset
     case "codegen" :: Nil => 
       SampleCodegen.gen( SampleMigrations ) // SampleMigrations is passed in here only because it contains the db connection
+    case "codegenonly" :: version :: Nil =>
+      SampleCodegen.doGen(version)
     case "dbdump" :: Nil =>
       import DB.session
       import scala.slick.jdbc.StaticQuery._

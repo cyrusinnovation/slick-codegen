@@ -147,6 +147,6 @@ ${indent(columns)}
 object ${scalaName} extends ${s.baseTablePackage}.${scalaName}
     """.trim()
   def renderEntity = s"""
-case class ${entityName}( ${columns.map(c=>c.name+" :"+c.scalaType).mkString(", ")} )
+case class ${entityName}( ${columns.map(c=>c.scalaName+" :"+c.scalaType).mkString(", ")} )
     """.trim()
 }

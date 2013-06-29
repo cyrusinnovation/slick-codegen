@@ -63,7 +63,7 @@ object CodeGen {
     out.println(")")
   }
 
-  def mkScalaName(s: String, capFirst:Boolean = true) = {
+  def mkScalaName(s: String, capFirst:Boolean = true):String = {
     val b = new StringBuilder
     var cap = capFirst
     for(c <- s) {
@@ -74,7 +74,8 @@ object CodeGen {
         cap = false
       }
     }
-    b.toString
+    val result = b.toString
+    if (scalaKeywords.contains(result)) "m" + mkScalaName(s, true) else result
   }
 
   def scalaTypeFor(c: MColumn): String =
@@ -87,7 +88,10 @@ object CodeGen {
       case TINYINT => "Byte"
       case SMALLINT => "Short"
       case INTEGER => "Int"
-      case BIGINT => "BigInteger"
+      // using "BigInteger" causes
+      // could not find implicit value for parameter tm: scala.slick.ast.TypedType[java.math.BigInteger]
+      // in generated code.
+      case BIGINT => "Long"
       case FLOAT => "Float"
       case REAL | DOUBLE => "Double"
       case NUMERIC | DECIMAL => "BigDecimal"
@@ -101,4 +105,7 @@ object CodeGen {
       case _ => "AnyRef"
     }
   }
+  
+  val tableMethods = List("clone","column","createFinderBy","create","ddl","eq","equals","foreignKey","foreignKeys","getClass","getLinearizedNodes","getResult","hashCode","index","indexes","isInstanceOf","mapOp","narrowedLinearizer","ne","nodeChildNames","nodeChildren","nodeDelegate","nodeIntrinsicSymbol","nodeMapChildren","nodeShaped","nodeTableSymbol","notify","notifyAll","op","primaryKey","schemaName","setParameter","synchronized","tableConstraints","tableName","toString","updateResult","wait")
+  val scalaKeywords = List("wait","abstract","case","catch","class","def","do","else","extends","false","final","finally","for","forSome","if","implicit","import","lazy","match","new","null","object","override","package","private","protected","return","sealed","super","this","throw","trait","try","true","type","val","var","while","with","yield")
 }
