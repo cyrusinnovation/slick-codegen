@@ -16,15 +16,10 @@ object SampleCodegen {
         override def entityName = tableToScalaName(name)
         override def columns = {
           val conf = tableMap(name)
-          println("getting columns for "+ conf)
           val allColumns = super.columns
-          println("allColumns is " + allColumns.map(_.name))
           val included:List[codegen.Column] = allColumns.filter(c => conf.included contains c.name)
-          println("included is " + included.map(_.name))
           val namesToExclude:List[String] = conf.excluded ::: conf.included
-          println("names to exclude is " + namesToExclude)
           val returner = (included ::: allColumns.filterNot(namesToExclude contains _.name)) take conf.maxcols 
-          println("returning " + returner.map(_.name))
           returner
         }
       }

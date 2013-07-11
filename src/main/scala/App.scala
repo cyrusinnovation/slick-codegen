@@ -1,7 +1,10 @@
 import scala.slick.migrations._
+import DB.driver.simple._
+import DB.session
+
 object App{
   def run(mm:MyMigrationManager){
-/*
+/*    
     import datamodel.latest.schema.tables._
     import datamodel.latest.schema.version.Version._
     if( version != mm.latest ){
@@ -14,7 +17,7 @@ object App{
         Users.map(u=>u).list
       }
     )
-    return
+    return    
 */
     println("The body of App.scala is currently commented out (activate after at least version 1)")
   }
