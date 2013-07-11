@@ -1,4 +1,6 @@
 import scala.slick.migrations._
+import DB.driver.simple._
+import DB.session
 
 object SampleMigrations extends MyMigrationManager{
   // WARNING!! never change version number or contents of any already published migration
