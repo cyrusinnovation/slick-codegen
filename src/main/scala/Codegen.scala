@@ -2,14 +2,14 @@ import scala.slick.jdbc.codegen
 import scala.slick.jdbc.reflect
 import scala.slick.migrations._
 import DB.session
-import com.typesafe.config._
 
-object SampleCodegen {
+object Codegen {
   val tables = DB.tables
   val tableNames = tables.map(_.table).toList
   val tableMap = tables.map(table => table.table -> table).toMap
   val tableToScalaName = tables.map(table => table.table -> table.scalaname).toMap
-  def doGen(ver: String) = {
+
+  def doGen() = {
     DB.database withSession {
 
       class MyTableGen(schema: codegen.Schema, table: reflect.Table) extends codegen.Table(schema, table) {
@@ -24,31 +24,13 @@ object SampleCodegen {
         }
       }
 
-      List("v" + ver, "latest").foreach {
-        version =>
-          val pkg =  DB.pkg + "." + version + ".schema"
-          val generator = new codegen.Schema(
-            new scala.slick.jdbc.reflect.Schema(tableNames),
-            pkg) {
-            override def table(t: reflect.Table) = new MyTableGen(this, t)
-            override def render = super.render + s"""
-package $pkg.version{
-  object Version{
-    def version = $ver
-  }
-}
-"""
-          }
-          val folder = DB.genfolder
-          generator.singleFile(folder)
+      val pkg =  DB.pkg + ".schema"
+      val generator = new codegen.Schema(
+        new scala.slick.jdbc.reflect.Schema(tableNames), pkg) {
+        override def table(t: reflect.Table) = new MyTableGen(this, t)
       }
+      val folder = DB.genfolder
+      generator.singleFile(folder)
     }
-  }
-  def gen(mm: MyMigrationManager) {
-    if (mm.notYetAppliedMigrations.size > 0) {
-      println("Your database is not up to date, code generation denied for compatibility reasons. Please update first.")
-      return
-    }
-    doGen(mm.latest.toString)
   }
 }
