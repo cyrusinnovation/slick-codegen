@@ -1,6 +1,6 @@
 organization := "com.typesafe"
 
-name := "slick-migrations"
+name := "slick-codegen"
 
 version := "1.0"
 
